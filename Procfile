@@ -1,1 +1,1 @@
-web: python Sql.py
+worker: python Sql.py

@@ -11,8 +11,8 @@ import os
 from flask import Flask, request
 
 #server = Flask(__name__)
-
-print("start on version 1.0")
+bot.remove_webhook()
+print("start on version 1.1")
 
 connect = sqlite3.connect('game.db')
 cursor = connect.cursor()
@@ -244,6 +244,7 @@ def game(answer):
     pl = getPepleFromMessage(answer)
     print(pl.name)
     print(TwoOfPeples)
+    print(pl.IsInTwo)
     if pl.IsInTwo == False:
         pl.busy = False  # освободился
 

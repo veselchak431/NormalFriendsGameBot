@@ -12,7 +12,7 @@ from flask import Flask, request
 
 #server = Flask(__name__)
 bot.remove_webhook()
-print("start on version 1.1")
+print("start on version 1.1.1")
 
 connect = sqlite3.connect('game.db')
 cursor = connect.cursor()
@@ -244,8 +244,8 @@ def game(answer):
     pl = getPepleFromMessage(answer)
     print(pl.name)
     print(TwoOfPeples)
-    print(pl.IsInTwo)
-    if pl.IsInTwo == False:
+    print(pl.IsInTwo())
+    if pl.IsInTwo() == False:
         pl.busy = False  # освободился
 
         availablePeople = Peoples.copy()

@@ -52,8 +52,7 @@ class player:
                 return True
         return False
 
-    def __repr__(self):
-        return self.name
+
 
 
 Peoples = []
@@ -111,16 +110,34 @@ class EnableOneBiometry(telebot.custom_filters.SimpleCustomFilter):
     def check(message):
         return OneBiEnavle
 
+@bot.message_handler(commands=['help'])
+def start(message):
+    bot.send_message(chat_id=message.from_user.id,text="отвеченно")
+
 
 @bot.message_handler(commands=['start'])
 def start(message):
     People_id = message.from_user.id
     connect = sqlite3.connect('game.db')
     cursor = connect.cursor()
-    cursor.execute("SELECT Id FROM Players WHERE Id = {}".format(str(People_id)))
+    cursor.execute("SELECT * FROM Players WHERE Id = {}".format(str(People_id)))
     data = cursor.fetchall()
-    print(data)
+    if data!=[]:
+        print(data[0])
+        print(data[0].count(None))
+
+        if data[0].count(None) != 3:    # Need for change to 0 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+            cursor.execute("DELETE FROM Players WHERE Id = {}".format(str(People_id)))
+            cursor.execute("INSERT INTO Players(Id) VALUES(?);", [People_id])
+            connect.commit()
+            Peoples.append(player(People_id))
+            msg = bot.send_message(message.from_user.id, """\
+            Как тебя зовут?
+            """)
+            bot.register_next_step_handler(msg, get_name)
+
     if data == []:
+
         cursor.execute("INSERT INTO Players(Id) VALUES(?);", [People_id])
         connect.commit()
         Peoples.append(player(People_id))

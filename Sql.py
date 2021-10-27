@@ -12,7 +12,7 @@ if 'DYNO' in os.environ:
     on_heroku = True
 
 
-print("start on version 1.1.3")
+print("start on version 1.2.0")
 
 
 
@@ -45,12 +45,15 @@ class player:
         self.comingPartners = []
         self.get_biometry = "onReg"
         self.busy = True
+        self.BiometryBusy = False
 
     def IsInTwo(self):
         for two in TwoOfPeples:
             if two[0] == self or two[1] == self:
                 return True
         return False
+    def __repr__(self):
+        return self.name
 
 
 
@@ -80,11 +83,10 @@ class OnBiometry(telebot.custom_filters.SimpleCustomFilter):
     @staticmethod
     def check(message):
         try:
-            print(getPepleFromMessage(message).get_biometry)
             return getPepleFromMessage(message).get_biometry
 
         except:
-            print("ну что то не так")
+            pass
 
 
 class BusyPleers(telebot.custom_filters.SimpleCustomFilter):
@@ -93,10 +95,9 @@ class BusyPleers(telebot.custom_filters.SimpleCustomFilter):
     @staticmethod
     def check(message):
         try:
-            print(getPepleFromMessage(message).busy)
-            return getPepleFromMessage(message).busy
+            return getPepleFromMessage(message).BiometryBusy
         except:
-            print("ну что то не так")
+            pass
 
 
 
@@ -117,14 +118,14 @@ def start(message):
 
 @bot.message_handler(commands=['start'])
 def start(message):
+    print("new player connect Player ID: ", message.from_user.id)
     People_id = message.from_user.id
     connect = sqlite3.connect('game.db')
     cursor = connect.cursor()
     cursor.execute("SELECT * FROM Players WHERE Id = {}".format(str(People_id)))
     data = cursor.fetchall()
-    if data!=[]:
-        print(data[0])
-        print(data[0].count(None))
+
+    if data != []:
 
         if data[0].count(None) != 3:    # Need for change to 0 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
             cursor.execute("DELETE FROM Players WHERE Id = {}".format(str(People_id)))
@@ -169,7 +170,7 @@ def Hueta(message):
         pl.biometry = test.ReturnEncodingsFromSQL(data[5])
         pl.get_biometry = False
 
-        print('Acount append')
+        print('Player with name: {} and ID: {} is ready'.format(pl, pl.id))
 
         bot.send_message(chat_id=message.from_user.id, text="""\
                 понятно, скоро начнем
@@ -194,7 +195,6 @@ def Hueta(message):
 
 
 def get_name(message):
-    print(message.text)
     pl = getPepleFromMessage(message)
     pl.name = message.text
     connect = sqlite3.connect('game.db')
@@ -208,7 +208,7 @@ def get_name(message):
 
 
 @bot.message_handler(CHECK_BIM=True, content_types=['photo'])
-@test.benchmark
+
 def photo(message):
     bot.send_message(chat_id=message.from_user.id, text="""\
                     подожди, идет обработка!
@@ -231,19 +231,19 @@ def photo(message):
         connect.commit()
         pl.biometry = encodings
         pl.get_biometry = False
-        print('Biometri accept')
+        print('Player with name: {} and ID: {} is ready'.format(pl, pl.id))
         bot.send_message(chat_id=message.from_user.id, text="""\
                     Фото принято, мы готовы начать!
                     """, reply_markup=startGame)
     else:
+        print('Player with name: {} and ID: {} failed Biomety'.format(pl, pl.id))
         bot.send_message(chat_id=message.from_user.id, text="""\
                             с фото что-то не так, попробуй еще раз
                             """)
-        print(encodings)
 
 
+# test for one person on photo
 @bot.message_handler(CHECK_BIM=False, CHECK_BUSY=True, ONE_BIOMETRY=True, content_types=['photo'])
-@test.benchmark
 def photo(message):
     print('проверяем еще фото')
     connect = sqlite3.connect('game.db')
@@ -271,42 +271,48 @@ def photo(message):
 
 
 @bot.callback_query_handler(lambda answer: answer.data == "Resume")
-@test.benchmark
 def game(answer):
     pl = getPepleFromMessage(answer)
-    print(pl.name)
-    print(TwoOfPeples)
-    print(pl.IsInTwo())
-    if pl.IsInTwo() == False:
-        pl.busy = False  # освободился
 
+
+    if pl.IsInTwo() == False:
+        print('Player {} resumed game.'.format(pl))
+        pl.busy = False  # освободился
         availablePeople = Peoples.copy()
         availablePeople.remove(pl)
-        print("availablePeople ", availablePeople)
+        print("List of players :", availablePeople)
 
+        for peop in availablePeople:
 
-        for peop in pl.comingPartners:
-            if (peop in availablePeople) or (peop.busy == True):
+            if (peop in pl.comingPartners) or (peop.busy == True):
                 availablePeople.remove(peop)
-        print(availablePeople)
+
+        print("List of possible pair :", availablePeople)
         if len(availablePeople) != 0:
             secondPerson = availablePeople[randint(0, len(availablePeople) - 1)]
             pl.busy = True
             secondPerson.busy = True
+            pl.BiometryBusy = True
+            secondPerson.BiometryBusy = True
+
             TwoOfPeples.append([pl, secondPerson])
-            print("пара создана")
+            print("New pair created between {} and {}".format(pl, secondPerson))
             bot.send_message(chat_id=pl.id, text="сделай фото с " + secondPerson.name)
             bot.send_message(chat_id=secondPerson.id, text="сделай фото с " + pl.name)
+
+
 
             bot.answer_callback_query(answer.id)
 
         else:
+            print('Player {}  wait for free player'.format(pl))
             bot.send_message(chat_id=answer.from_user.id, text="""\
                                     жди пару
                                     """)
 
             bot.answer_callback_query(answer.id)
     else:
+        print('Player {}  try to find new pair, but is in pair : {} '.format(pl,getTwoPepleFromMessage(answer)))
         bot.send_message(chat_id=answer.from_user.id, text="""\
                         видимо ты уже в паре
                         """)
@@ -314,36 +320,33 @@ def game(answer):
 
 
 @bot.message_handler(CHECK_BIM=False, CHECK_BUSY=True, content_types=['photo'])
-@test.benchmark
 def photo(message):
     pl1, pl2 = getTwoPepleFromMessage(message)
-    print('проверяем фото пары')
     src = '{}.jpg'.format(str(message.from_user.id) + "mes" + str(message.id))
     file_info = bot.get_file(message.photo[-1].file_id)
     downloaded_file = bot.download_file(file_info.file_path)
     out = open(src, "wb")
     out.write(downloaded_file)
     out.close()
-    print('фото загруженно')
+    print('Photo from {} downloaded.'.format(getPepleFromMessage(message)))
     result = testbiometry.CheckTwoPresenceOfImage(pl1.biometry, pl2.biometry, src)
     remove(src)
-    print(result)
+    print("the result of the uploaded photo : ",result)
     result = True  # всегда пропускать не смотря на фото
     if result:
         pl1.comingPartners.append(pl2)
         pl2.comingPartners.append(pl1)
-        print('пробуем удалить')
         try:
             TwoOfPeples.remove([pl1, pl2])
-            print("прокатило 1")
         except:
             pass
         try:
             TwoOfPeples.remove([pl2, pl1])
-            print("прокатило 2")
         except:
             pass
-
+        print("Pair of {} and {} successfully passed the task.".format(pl1, pl2))
+        pl1.BiometryBusy = False
+        pl2.BiometryBusy = False
         bot.send_message(chat_id=pl1.id, text='на фото действительно есть ' + pl1.name + " и " + pl2.name,
                          reply_markup=startGame)
         bot.send_message(chat_id=pl2.id, text='на фото действительно есть ' + pl1.name + " и " + pl2.name,
@@ -351,6 +354,7 @@ def photo(message):
 
 
     else:
+        print("Pair of {} and {} failed the task, and try again.".format(pl1, pl2))
         bot.send_message(message.chat.id, 'на фото нет нужных людей или фото плохое')
         bot.send_message(message.chat.id, 'попробуйте еще раз')
 

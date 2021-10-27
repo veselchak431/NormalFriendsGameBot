@@ -15,7 +15,7 @@ image5 = "C:/Users/андрюшка/OneDrive/Desktop/II/Images/Вера.bmp"
 
 def GenerateEncodings(imageSrc):
     loadedImage = face_recognition.load_image_file(imageSrc)
-    print(len(face_recognition.face_locations(loadedImage)))
+    #print(len(face_recognition.face_locations(loadedImage)))
     if len(face_recognition.face_locations(loadedImage)) == 0:
         return "person not found"
     if len(face_recognition.face_locations(loadedImage))==1:
@@ -29,7 +29,7 @@ def CheckPresenceOfImage(encodingOfknown,imageSrc):
         loadedImage = face_recognition.load_image_file(imageSrc)
         NumberOfPresenceOnImage =len(face_recognition.face_locations(loadedImage))
         EncodingsOnImage =face_recognition.face_encodings(loadedImage)
-        print("Number Of Presence On Image:",NumberOfPresenceOnImage)
+        #print("Number Of Presence On Image:",NumberOfPresenceOnImage)
         for PersonEncoding in EncodingsOnImage:
                 if face_recognition.compare_faces(encodingOfknown,PersonEncoding)[0]:
                     return True
@@ -41,25 +41,25 @@ def CheckTwoPresenceOfImage(EncodingOfFirstKnown,EncodingOfSecondKnown,imageSrc)
     if not isinstance(EncodingOfFirstKnown,str) and not isinstance(EncodingOfSecondKnown,str):
         loadedImage = face_recognition.load_image_file(imageSrc)
         NumberOfPresenceOnImage =len(face_recognition.face_locations(loadedImage))
-        print("Number Of Presence On Image:", NumberOfPresenceOnImage)
+        #print("Number Of Presence On Image:", NumberOfPresenceOnImage)
         if NumberOfPresenceOnImage>1:
             EncodingsOnImage =face_recognition.face_encodings(loadedImage)
             for FirstPersonEncoding in EncodingsOnImage:
                     if face_recognition.compare_faces(EncodingOfFirstKnown,FirstPersonEncoding)[0]:
-                        print("все хорошо с первым")
+                        #print("все хорошо с первым")
                         for SecondPersonEncoding in EncodingsOnImage:
                             if face_recognition.compare_faces(EncodingOfSecondKnown, SecondPersonEncoding)[0]:
-                                print("оба человека найдены")
+                                #print("оба человека найдены")
                                 return True
-                        print("не нашли одного человека")
+                       # print("не нашли одного человека")
                         return False
-            print("не нашли двух человек или первого")
+            #print("не нашли двух человек или первого")
             return False
         else:
-            print("на фото нехватает человек")
+            #print("на фото нехватает человек")
             return False
     else:
-        print("у кого-то неправильный encoding")
+        #print("у кого-то неправильный encoding")
         return False
 
 if __name__ == "__main__":

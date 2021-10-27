@@ -1,18 +1,27 @@
 import sqlite3
 import telebot
-
-TOKEN = '2068317828:AAFvhIRtiwNZqTGAUznZkqtpA5RwlkDRJ4w'
-bot = telebot.TeleBot(TOKEN)
 import test, testbiometry
 from random import randint
 from os import remove
 import os
-
 from flask import Flask, request
 
-server = Flask(__name__)
 
-print("start on version 1.1.2")
+on_heroku = False
+if 'DYNO' in os.environ:
+    on_heroku = True
+
+
+print("start on version 1.1.3")
+
+
+
+
+
+TOKEN = '2068317828:AAFvhIRtiwNZqTGAUznZkqtpA5RwlkDRJ4w'
+bot = telebot.TeleBot(TOKEN)
+
+
 
 connect = sqlite3.connect('game.db')
 cursor = connect.cursor()
@@ -26,7 +35,6 @@ cursor.execute("""CREATE TABLE IF NOT EXISTS Players(
    );""")
 connect.commit()
 
-OneBiEnavle = False
 
 
 class player:
@@ -43,6 +51,9 @@ class player:
             if two[0] == self or two[1] == self:
                 return True
         return False
+
+    def __repr__(self):
+        return self.name
 
 
 Peoples = []
@@ -89,6 +100,10 @@ class BusyPleers(telebot.custom_filters.SimpleCustomFilter):
             print("ну что то не так")
 
 
+
+
+
+OneBiEnavle = False
 class EnableOneBiometry(telebot.custom_filters.SimpleCustomFilter):
     key = 'ONE_BIOMETRY'
 
@@ -328,19 +343,24 @@ bot.add_custom_filter(BusyPleers())
 bot.add_custom_filter(EnableOneBiometry())
 
 
+if on_heroku==True:
+    server = Flask(__name__)
+    @server.route('/' + TOKEN, methods=['POST'])
+    def getMessage():
+        bot.process_new_updates([telebot.types.Update.de_json(request.stream.read().decode("utf-8"))])
+        return "!", 200
 
-@server.route('/' + TOKEN, methods=['POST'])
-def getMessage():
-    bot.process_new_updates([telebot.types.Update.de_json(request.stream.read().decode("utf-8"))])
-    return "!", 200
+    @server.route("/")
+    def webhook():
+        bot.remove_webhook()
+        bot.set_webhook(url='https://botunitaznovobochka.herokuapp.com/' + TOKEN)
+        return "!", 200
 
-@server.route("/")
-def webhook():
-    bot.remove_webhook()
-    bot.set_webhook(url='https://botunitaznovobochka.herokuapp.com/' + TOKEN)
-    return "!", 200
-
-
-
-if __name__ == "__main__":
-    server.run(host="0.0.0.0", port=int(os.environ.get('PORT', 5000)))
+    if __name__ == "__main__":
+        print("program start on heroku")
+        server.run(host="0.0.0.0", port=int(os.environ.get('PORT', 5000)))
+else:
+    if __name__ == "__main__":
+        print("program start on computer")
+        bot.remove_webhook()
+        bot.polling(none_stop=True, interval=0)

@@ -1,39 +1,30 @@
-import sqlite3
+import psycopg2
 import telebot
 import test, testbiometry
 from random import randint
 from os import remove
 import os
 from flask import Flask, request
-
-
-on_heroku = False
-if 'DYNO' in os.environ:
-    on_heroku = True
+import urllib.parse as urlparse
 
 
 print("start on version 1.2.0")
-
-
-
-
 
 TOKEN = '2068317828:AAFvhIRtiwNZqTGAUznZkqtpA5RwlkDRJ4w'
 bot = telebot.TeleBot(TOKEN)
 
 
-
-connect = sqlite3.connect('game.db')
-cursor = connect.cursor()
-cursor.execute("""CREATE TABLE IF NOT EXISTS Players(
-   Id INT PRIMARY KEY,
-   Name TEXT,
-   FirstDescription TEXT,
-   SecondDescription TEXT,
-   LookDescription TEXT,
-   BiometryEncoding TEXT
-   );""")
-connect.commit()
+def init_DB(connect):
+    cursor = connect.cursor()
+    cursor.execute("""CREATE TABLE IF NOT EXISTS Players(
+       Id INT PRIMARY KEY,
+       Name TEXT,
+       FirstDescription TEXT,
+       SecondDescription TEXT,
+       LookDescription TEXT,
+       BiometryEncoding TEXT
+       );""")
+    connect.commit()
 
 
 
@@ -120,8 +111,8 @@ def start(message):
 def start(message):
     print("new player connect Player ID: ", message.from_user.id)
     People_id = message.from_user.id
-    connect = sqlite3.connect('game.db')
-    cursor = connect.cursor()
+
+
     cursor.execute("SELECT * FROM Players WHERE Id = {}".format(str(People_id)))
     data = cursor.fetchall()
 
@@ -129,7 +120,7 @@ def start(message):
 
         if data[0].count(None) != 3:    # Need for change to 0 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
             cursor.execute("DELETE FROM Players WHERE Id = {}".format(str(People_id)))
-            cursor.execute("INSERT INTO Players(Id) VALUES(?);", [People_id])
+            cursor.execute("INSERT INTO Players(Id) VALUES({});".format(str(People_id)))
             connect.commit()
             Peoples.append(player(People_id))
             msg = bot.send_message(message.from_user.id, """\
@@ -139,7 +130,7 @@ def start(message):
 
     if data == []:
 
-        cursor.execute("INSERT INTO Players(Id) VALUES(?);", [People_id])
+        cursor.execute("INSERT INTO Players(Id) VALUES({});".format(People_id))
         connect.commit()
         Peoples.append(player(People_id))
         msg = bot.send_message(message.from_user.id, """\
@@ -159,9 +150,7 @@ def start(message):
 def Hueta(message):
     if (message.text).lower() == "да":
 
-        connect = sqlite3.connect('game.db')
-        cursor = connect.cursor()
-
+        global cursor
         Peoples.append(player(message.from_user.id))
         pl = getPepleFromMessage(message)
         cursor.execute("SELECT * FROM Players WHERE Id = {}".format(str(pl.id)))
@@ -178,12 +167,11 @@ def Hueta(message):
 
     elif (message.text).lower() == "нет":
 
-        connect = sqlite3.connect('game.db')
-        cursor = connect.cursor()
+
 
         cursor.execute("DELETE FROM Players WHERE Id = {}".format(str(message.from_user.id)))
         connect.commit()
-        cursor.execute("INSERT INTO Players(Id) VALUES(?);", [message.from_user.id])
+        cursor.execute("INSERT INTO Players(Id) VALUES({});".format(str(message.from_user.id)))
         connect.commit()
         Peoples.append(player(message.from_user.id))
         msg = bot.send_message(message.from_user.id, """\
@@ -197,8 +185,6 @@ def Hueta(message):
 def get_name(message):
     pl = getPepleFromMessage(message)
     pl.name = message.text
-    connect = sqlite3.connect('game.db')
-    cursor = connect.cursor()
     cursor.execute("UPDATE Players SET Name = '{}' WHERE Id = {};".format(message.text, str(message.from_user.id)))
     connect.commit()
     pl.get_biometry = True
@@ -224,8 +210,6 @@ def photo(message):
     encodings = testbiometry.GenerateEncodings(src)
     remove(src)
     if type(encodings) != str:
-        connect = sqlite3.connect('game.db')
-        cursor = connect.cursor()
         cursor.execute(
             "UPDATE Players SET BiometryEncoding = '{}' WHERE Id = {};".format(encodings, str(message.from_user.id)))
         connect.commit()
@@ -246,8 +230,6 @@ def photo(message):
 @bot.message_handler(CHECK_BIM=False, CHECK_BUSY=True, ONE_BIOMETRY=True, content_types=['photo'])
 def photo(message):
     print('проверяем еще фото')
-    connect = sqlite3.connect('game.db')
-    cursor = connect.cursor()
     cursor.execute("SELECT BiometryEncoding FROM Players WHERE Id = {};".format(str(message.from_user.id)))
     encoding = cursor.fetchone()[0]
     cursor.execute("SELECT Name FROM Players WHERE Id = {};".format(str(message.from_user.id)))
@@ -364,7 +346,22 @@ bot.add_custom_filter(BusyPleers())
 bot.add_custom_filter(EnableOneBiometry())
 
 
+on_heroku = False
+if 'DYNO' in os.environ:
+    on_heroku = True
+
+
 if on_heroku==True:
+
+    url = urlparse.urlparse(os.environ['DATABASE_URL'])
+    dbname = url.path[1:]
+    user = url.username
+    password = url.password
+    host = url.hostname
+    port = url.port
+
+
+
     server = Flask(__name__)
     @server.route('/' + TOKEN, methods=['POST'])
     def getMessage():
@@ -379,9 +376,16 @@ if on_heroku==True:
 
     if __name__ == "__main__":
         print("program start on heroku")
+        print("database information")
+        print("port= ",port, "user= ",user, "password= ",password, "host= ",host)
+        connect = psycopg2.connect(port=port, user=user, password=password, host=host)
+        cursor = connect.cursor()
+
         server.run(host="0.0.0.0", port=int(os.environ.get('PORT', 5000)))
 else:
     if __name__ == "__main__":
         print("program start on computer")
         bot.remove_webhook()
+        connect = psycopg2.connect(port="5432", user='postgres', password='1234567890', host='localhost')
+        cursor = connect.cursor()
         bot.polling(none_stop=True, interval=0)

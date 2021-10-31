@@ -378,7 +378,7 @@ if on_heroku==True:
         print("program start on heroku")
         print("database information")
         print("port= ",port, "user= ",user, "password= ",password, "host= ",host)
-        connect = psycopg2.connect(port=port, user=user, password=password, host=host)
+        connect = psycopg2.connect(dbname=dbname,port=port, user=user, password=password, host=host)
         cursor = connect.cursor()
         init_DB(connect)
         server.run(host="0.0.0.0", port=int(os.environ.get('PORT', 5000)))

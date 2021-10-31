@@ -380,7 +380,7 @@ if on_heroku==True:
         print("port= ",port, "user= ",user, "password= ",password, "host= ",host)
         connect = psycopg2.connect(port=port, user=user, password=password, host=host)
         cursor = connect.cursor()
-
+        init_DB(connect)
         server.run(host="0.0.0.0", port=int(os.environ.get('PORT', 5000)))
 else:
     if __name__ == "__main__":
@@ -388,4 +388,5 @@ else:
         bot.remove_webhook()
         connect = psycopg2.connect(port="5432", user='postgres', password='1234567890', host='localhost')
         cursor = connect.cursor()
+        init_DB(connect)
         bot.polling(none_stop=True, interval=0)

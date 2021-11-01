@@ -6,7 +6,7 @@ from os import remove
 import os
 from flask import Flask, request
 import urllib.parse as urlparse
-
+import yadisk
 
 print("start on version 1.2.0")
 
@@ -27,7 +27,6 @@ def init_DB(connect):
     connect.commit()
 
 
-
 class player:
     def __init__(self, id):
         self.id = id
@@ -43,10 +42,9 @@ class player:
             if two[0] == self or two[1] == self:
                 return True
         return False
+
     def __repr__(self):
         return self.name
-
-
 
 
 Peoples = []
@@ -92,19 +90,9 @@ class BusyPleers(telebot.custom_filters.SimpleCustomFilter):
 
 
 
-
-
-OneBiEnavle = False
-class EnableOneBiometry(telebot.custom_filters.SimpleCustomFilter):
-    key = 'ONE_BIOMETRY'
-
-    @staticmethod
-    def check(message):
-        return OneBiEnavle
-
 @bot.message_handler(commands=['help'])
 def start(message):
-    bot.send_message(chat_id=message.from_user.id,text="отвеченно")
+    bot.send_message(chat_id=message.from_user.id, text="отвеченно")
 
 
 @bot.message_handler(commands=['start'])
@@ -112,13 +100,12 @@ def start(message):
     print("new player connect Player ID: ", message.from_user.id)
     People_id = message.from_user.id
 
-
     cursor.execute("SELECT * FROM Players WHERE Id = {}".format(str(People_id)))
     data = cursor.fetchall()
 
     if data != []:
 
-        if data[0].count(None) != 3:    # Need for change to 0 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+        if data[0].count(None) != 3:  # Need for change to 0 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
             cursor.execute("DELETE FROM Players WHERE Id = {}".format(str(People_id)))
             cursor.execute("INSERT INTO Players(Id) VALUES({});".format(str(People_id)))
             connect.commit()
@@ -167,8 +154,6 @@ def Hueta(message):
 
     elif (message.text).lower() == "нет":
 
-
-
         cursor.execute("DELETE FROM Players WHERE Id = {}".format(str(message.from_user.id)))
         connect.commit()
         cursor.execute("INSERT INTO Players(Id) VALUES({});".format(str(message.from_user.id)))
@@ -179,7 +164,7 @@ def Hueta(message):
                 """)
         bot.register_next_step_handler(msg, get_name)
     else:
-        bot.send_message(message.from_user.id, "написана хуета, попробуй заново(/start)")
+        bot.send_message(message.from_user.id, "Что-то не понял, попробуй заново(/start)")
 
 
 def get_name(message):
@@ -194,7 +179,6 @@ def get_name(message):
 
 
 @bot.message_handler(CHECK_BIM=True, content_types=['photo'])
-
 def photo(message):
     bot.send_message(chat_id=message.from_user.id, text="""\
                     подожди, идет обработка!
@@ -208,7 +192,14 @@ def photo(message):
     out.write(downloaded_file)
     out.close()
     encodings = testbiometry.GenerateEncodings(src)
+
+    if yandex_Disk.exists("/game/biometry/{}.jpg".format(str(message.from_user.id) + "biometry")):
+        print("this file was early uploaded")
+        yandex_Disk.remove("/game/biometry/{}.jpg".format(str(message.from_user.id) + "biometry"))
+    yandex_Disk.upload(src, "/game/biometry/{}.jpg".format(str(message.from_user.id) + "biometry"))
+
     remove(src)
+
     if type(encodings) != str:
         cursor.execute(
             "UPDATE Players SET BiometryEncoding = '{}' WHERE Id = {};".format(encodings, str(message.from_user.id)))
@@ -226,36 +217,10 @@ def photo(message):
                             """)
 
 
-# test for one person on photo
-@bot.message_handler(CHECK_BIM=False, CHECK_BUSY=True, ONE_BIOMETRY=True, content_types=['photo'])
-def photo(message):
-    print('проверяем еще фото')
-    cursor.execute("SELECT BiometryEncoding FROM Players WHERE Id = {};".format(str(message.from_user.id)))
-    encoding = cursor.fetchone()[0]
-    cursor.execute("SELECT Name FROM Players WHERE Id = {};".format(str(message.from_user.id)))
-    Name = cursor.fetchone()[0]
-    src = '{}.jpg'.format(str(message.from_user.id) + "mes" + str(message.id))
-    file_info = bot.get_file(message.photo[-1].file_id)
-    downloaded_file = bot.download_file(file_info.file_path)
-    out = open(src, "wb")
-    out.write(downloaded_file)
-    out.close()
-    print('базы данных не причем')
-    print(encoding)
-    encoding = test.ReturnEncodingsFromSQL(encoding)
-    print(encoding)
-    result = testbiometry.CheckPresenceOfImage(encoding, src)
-    remove(src)
-    if result:
-        bot.send_message(message.chat.id, 'на фото действительно есть' + Name)
-    else:
-        bot.send_message(message.chat.id, 'на фото нет' + Name)
-
 
 @bot.callback_query_handler(lambda answer: answer.data == "Resume")
 def game(answer):
     pl = getPepleFromMessage(answer)
-
 
     if pl.IsInTwo() == False:
         print('Player {} resumed game.'.format(pl))
@@ -282,8 +247,6 @@ def game(answer):
             bot.send_message(chat_id=pl.id, text="сделай фото с " + secondPerson.name)
             bot.send_message(chat_id=secondPerson.id, text="сделай фото с " + pl.name)
 
-
-
             bot.answer_callback_query(answer.id)
 
         else:
@@ -294,7 +257,7 @@ def game(answer):
 
             bot.answer_callback_query(answer.id)
     else:
-        print('Player {}  try to find new pair, but is in pair : {} '.format(pl,getTwoPepleFromMessage(answer)))
+        print('Player {}  try to find new pair, but is in pair : {} '.format(pl, getTwoPepleFromMessage(answer)))
         bot.send_message(chat_id=answer.from_user.id, text="""\
                         видимо ты уже в паре
                         """)
@@ -312,8 +275,13 @@ def photo(message):
     out.close()
     print('Photo from {} downloaded.'.format(getPepleFromMessage(message)))
     result = testbiometry.CheckTwoPresenceOfImage(pl1.biometry, pl2.biometry, src)
+
+    if yandex_Disk.exists("/game/pair_foto/{}.jpg".format(str(message.from_user.id) + "mes" + str(message.id))):
+        yandex_Disk.remove("/game/pair_foto/{}.jpg".format(str(message.from_user.id) + "mes" + str(message.id)))
+    yandex_Disk.upload(src, ("/game/pair_foto/{}.jpg".format(str(message.from_user.id) + "mes" + str(message.id))))
+
     remove(src)
-    print("the result of the uploaded photo : ",result)
+    print("the result of the uploaded photo : ", result)
     result = True  # всегда пропускать не смотря на фото
     if result:
         pl1.comingPartners.append(pl2)
@@ -343,15 +311,12 @@ def photo(message):
 
 bot.add_custom_filter(OnBiometry())
 bot.add_custom_filter(BusyPleers())
-bot.add_custom_filter(EnableOneBiometry())
-
 
 on_heroku = False
 if 'DYNO' in os.environ:
     on_heroku = True
 
-
-if on_heroku==True:
+if on_heroku == True:
 
     url = urlparse.urlparse(os.environ['DATABASE_URL'])
     dbname = url.path[1:]
@@ -360,13 +325,14 @@ if on_heroku==True:
     host = url.hostname
     port = url.port
 
-
-
     server = Flask(__name__)
+
+
     @server.route('/' + TOKEN, methods=['POST'])
     def getMessage():
         bot.process_new_updates([telebot.types.Update.de_json(request.stream.read().decode("utf-8"))])
         return "!", 200
+
 
     @server.route("/")
     def webhook():
@@ -374,19 +340,30 @@ if on_heroku==True:
         bot.set_webhook(url='https://botunitaznovobochka.herokuapp.com/' + TOKEN)
         return "!", 200
 
+
     if __name__ == "__main__":
         print("program start on heroku")
         print("database information")
-        print("port= ",port, "user= ",user, "password= ",password, "host= ",host)
-        connect = psycopg2.connect(dbname=dbname,port=port, user=user, password=password, host=host)
+        connect = psycopg2.connect(dbname=dbname, port=port, user=user, password=password, host=host)
         cursor = connect.cursor()
         init_DB(connect)
+
+        yandex_Disk = yadisk.YaDisk(token="AQAAAAA-xAjWAAd55PHPxQdQ_Ur_rZqMqnNhQZM")
+        print("check yandex token :", yandex_Disk.check_token())
+
         server.run(host="0.0.0.0", port=int(os.environ.get('PORT', 5000)))
 else:
     if __name__ == "__main__":
         print("program start on computer")
         bot.remove_webhook()
+
         connect = psycopg2.connect(port="5432", user='postgres', password='1234567890', host='localhost')
         cursor = connect.cursor()
         init_DB(connect)
+
+
+        yandex_Disk = yadisk.YaDisk(token="AQAAAAA-xAjWAAd55PHPxQdQ_Ur_rZqMqnNhQZM")
+        print("check yandex token :", yandex_Disk.check_token())
+
+
         bot.polling(none_stop=True, interval=0)

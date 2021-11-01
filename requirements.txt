@@ -7,4 +7,5 @@ cmake==3.21.3
 dlib==19.22.0
 opencv-python-headless==4.5.4.58
 psycopg2-binary==2.9.1
+yadisk==1.2.14
 

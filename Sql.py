@@ -103,6 +103,8 @@ def start(message):
     cursor.execute("SELECT * FROM Players WHERE Id = {}".format(str(People_id)))
     data = cursor.fetchall()
 
+
+
     if data != []:
 
         if data[0].count(None) != 3:  # Need for change to 0 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
@@ -225,14 +227,14 @@ def game(answer):
     if pl.IsInTwo() == False:
         print('Player {} resumed game.'.format(pl))
         pl.busy = False  # освободился
-        availablePeople = Peoples.copy()
-        availablePeople.remove(pl)
-        print("List of players :", availablePeople)
+        ListofPeople = Peoples.copy()
+        ListofPeople.remove(pl)
+        print("List of players :", ListofPeople)
 
-        for peop in availablePeople:
-
-            if (peop in pl.comingPartners) or (peop.busy == True):
-                availablePeople.remove(peop)
+        availablePeople = []
+        for peop in ListofPeople:
+            if not(peop in pl.comingPartners) and (peop.busy == False):
+                availablePeople.append(peop)
 
         print("List of possible pair :", availablePeople)
         if len(availablePeople) != 0:
@@ -245,8 +247,8 @@ def game(answer):
             TwoOfPeples.append([pl, secondPerson])
             print("New pair created between {} and {}".format(pl, secondPerson))
             bot.send_message(chat_id=pl.id, text="сделай фото с " + secondPerson.name)
+            bot.send_message(chat_id=pl.id, text="* отправь любое фото с 2 людьми на нем")   #добавленно на время теста
             bot.send_message(chat_id=secondPerson.id, text="сделай фото с " + pl.name)
-
             bot.answer_callback_query(answer.id)
 
         else:

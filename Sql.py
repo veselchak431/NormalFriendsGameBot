@@ -10,7 +10,7 @@ import yadisk
 
 print("start on version 1.2.0")
 
-TOKEN = '2068317828:AAFvhIRtiwNZqTGAUznZkqtpA5RwlkDRJ4w'
+TOKEN = os.environ['BOT_TOKEN']
 bot = telebot.TeleBot(TOKEN)
 
 
@@ -89,7 +89,6 @@ class BusyPleers(telebot.custom_filters.SimpleCustomFilter):
             pass
 
 
-
 @bot.message_handler(commands=['help'])
 def start(message):
     bot.send_message(chat_id=message.from_user.id, text="отвеченно")
@@ -102,8 +101,6 @@ def start(message):
 
     cursor.execute("SELECT * FROM Players WHERE Id = {}".format(str(People_id)))
     data = cursor.fetchall()
-
-
 
     if data != []:
 
@@ -219,7 +216,6 @@ def photo(message):
                             """)
 
 
-
 @bot.callback_query_handler(lambda answer: answer.data == "Resume")
 def game(answer):
     pl = getPepleFromMessage(answer)
@@ -233,7 +229,7 @@ def game(answer):
 
         availablePeople = []
         for peop in ListofPeople:
-            if not(peop in pl.comingPartners) and (peop.busy == False):
+            if not (peop in pl.comingPartners) and (peop.busy == False):
                 availablePeople.append(peop)
 
         print("List of possible pair :", availablePeople)
@@ -247,7 +243,7 @@ def game(answer):
             TwoOfPeples.append([pl, secondPerson])
             print("New pair created between {} and {}".format(pl, secondPerson))
             bot.send_message(chat_id=pl.id, text="сделай фото с " + secondPerson.name)
-            bot.send_message(chat_id=pl.id, text="* отправь любое фото с 2 людьми на нем")   #добавленно на время теста
+            bot.send_message(chat_id=pl.id, text="* отправь любое фото с 2 людьми на нем")  # добавленно на время теста
             bot.send_message(chat_id=secondPerson.id, text="сделай фото с " + pl.name)
             bot.answer_callback_query(answer.id)
 
@@ -269,7 +265,7 @@ def game(answer):
 @bot.message_handler(CHECK_BIM=False, CHECK_BUSY=True, content_types=['photo'])
 def photo(message):
     pl1, pl2 = getTwoPepleFromMessage(message)
-    src = '{}.jpg'.format(str(message.from_user.id) + "mes" + str(message.id))
+    src = '{}.jpg'.format(str(pl1) + "_и_" + str(pl2))
     file_info = bot.get_file(message.photo[-1].file_id)
     downloaded_file = bot.download_file(file_info.file_path)
     out = open(src, "wb")
@@ -278,9 +274,9 @@ def photo(message):
     print('Photo from {} downloaded.'.format(getPepleFromMessage(message)))
     result = testbiometry.CheckTwoPresenceOfImage(pl1.biometry, pl2.biometry, src)
 
-    if yandex_Disk.exists("/game/pair_foto/{}.jpg".format(str(message.from_user.id) + "mes" + str(message.id))):
-        yandex_Disk.remove("/game/pair_foto/{}.jpg".format(str(message.from_user.id) + "mes" + str(message.id)))
-    yandex_Disk.upload(src, ("/game/pair_foto/{}.jpg".format(str(message.from_user.id) + "mes" + str(message.id))))
+    if yandex_Disk.exists("/game/pair_foto/{}.jpg".format(str(pl1) + "_и_" + str(pl2))):
+        yandex_Disk.remove("/game/pair_foto/{}.jpg".format(str(pl1) + "_и_" + str(pl2)))
+    yandex_Disk.upload(src, ("/game/pair_foto/{}.jpg".format(str(pl1) + "_и_" + str(pl2))))
 
     remove(src)
     print("the result of the uploaded photo : ", result)
@@ -299,9 +295,9 @@ def photo(message):
         print("Pair of {} and {} successfully passed the task.".format(pl1, pl2))
         pl1.BiometryBusy = False
         pl2.BiometryBusy = False
-        bot.send_message(chat_id=pl1.id, text='на фото действительно есть ' + pl1.name + " и " + pl2.name,
+        bot.send_message(chat_id=pl1.id, text='на фото действительно есть ' + str(pl1) + " и " + str(pl2),
                          reply_markup=startGame)
-        bot.send_message(chat_id=pl2.id, text='на фото действительно есть ' + pl1.name + " и " + pl2.name,
+        bot.send_message(chat_id=pl2.id, text='на фото действительно есть ' + str(pl1) + " и " + str(pl2),
                          reply_markup=startGame)
 
 
@@ -339,7 +335,7 @@ if on_heroku == True:
     @server.route("/")
     def webhook():
         bot.remove_webhook()
-        bot.set_webhook(url='https://botunitaznovobochka.herokuapp.com/' + TOKEN)
+        bot.set_webhook(url=os.environ['WEBHOOK_URL'] + TOKEN)
         return "!", 200
 
 
@@ -350,7 +346,7 @@ if on_heroku == True:
         cursor = connect.cursor()
         init_DB(connect)
 
-        yandex_Disk = yadisk.YaDisk(token="AQAAAAA-xAjWAAd55PHPxQdQ_Ur_rZqMqnNhQZM")
+        yandex_Disk = yadisk.YaDisk(token=os.environ['YANDEX_DISK_TOKEN'])
         print("check yandex token :", yandex_Disk.check_token())
 
         server.run(host="0.0.0.0", port=int(os.environ.get('PORT', 5000)))
@@ -363,9 +359,7 @@ else:
         cursor = connect.cursor()
         init_DB(connect)
 
-
-        yandex_Disk = yadisk.YaDisk(token="AQAAAAA-xAjWAAd55PHPxQdQ_Ur_rZqMqnNhQZM")
+        yandex_Disk = yadisk.YaDisk(token=os.environ['YANDEX_DISK_TOKEN'])
         print("check yandex token :", yandex_Disk.check_token())
-
 
         bot.polling(none_stop=True, interval=0)

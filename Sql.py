@@ -1,12 +1,19 @@
+import os
+import urllib.parse as urlparse
+from os import remove
+from random import randint
+
 import psycopg2
 import telebot
-import test, testbiometry
-from random import randint
-from os import remove
-import os
-from flask import Flask, request
-import urllib.parse as urlparse
 import yadisk
+from flask import Flask, request
+
+import test
+import testbiometry
+from wanted_person_image import create_foto_of_wanted
+
+
+
 
 print("start on version 1.2.0")
 
@@ -16,12 +23,14 @@ bot = telebot.TeleBot(TOKEN)
 
 def init_DB(connect):
     cursor = connect.cursor()
+
     cursor.execute("""CREATE TABLE IF NOT EXISTS Players(
        Id INT PRIMARY KEY,
        Name TEXT,
-       FirstDescription TEXT,
-       SecondDescription TEXT,
-       LookDescription TEXT,
+       Height Text,
+       InterestingFact TEXT,
+       LookFact TEXT,
+       RandomFacts TEXT,
        BiometryEncoding TEXT
        );""")
     connect.commit()
@@ -31,11 +40,17 @@ class player:
     def __init__(self, id):
         self.id = id
         self.name = ''
+        self.height = ''
         self.biometry = ''
+        self.zadiak = ''
+        self.facts = []
         self.comingPartners = []
         self.get_biometry = "onReg"
         self.busy = True
         self.BiometryBusy = False
+
+    def get_fact(self):
+        return self.facts[randint(0, len(self.facts) - 1)]
 
     def IsInTwo(self):
         for two in TwoOfPeples:
@@ -104,7 +119,7 @@ def start(message):
 
     if data != []:
 
-        if data[0].count(None) != 3:  # Need for change to 0 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+        if data[0].count(None) != 0:  # Need for change to 0 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
             cursor.execute("DELETE FROM Players WHERE Id = {}".format(str(People_id)))
             cursor.execute("INSERT INTO Players(Id) VALUES({});".format(str(People_id)))
             connect.commit()
@@ -123,7 +138,7 @@ def start(message):
         Как тебя зовут?
         """)
         bot.register_next_step_handler(msg, get_name)
-    else:  # дописать уже зареганого
+    else:
         cursor.execute("SELECT Name FROM Players WHERE Id = {}".format(str(People_id)))
         Name = cursor.fetchall()[0][0]
         try:
@@ -142,7 +157,10 @@ def Hueta(message):
         cursor.execute("SELECT * FROM Players WHERE Id = {}".format(str(pl.id)))
         data = cursor.fetchone()
         pl.name = data[1]
-        pl.biometry = test.ReturnEncodingsFromSQL(data[5])
+        pl.height = data[2]
+        for i in range(3, 6):
+            pl.facts.append(data[i])
+        pl.biometry = test.ReturnEncodingsFromSQL(data[6])
         pl.get_biometry = False
 
         print('Player with name: {} and ID: {} is ready'.format(pl, pl.id))
@@ -171,6 +189,71 @@ def get_name(message):
     pl.name = message.text
     cursor.execute("UPDATE Players SET Name = '{}' WHERE Id = {};".format(message.text, str(message.from_user.id)))
     connect.commit()
+    msg = bot.send_message(message.from_user.id, "Какого ты роста?")
+    bot.register_next_step_handler(msg, get_height)
+
+
+def get_height(message):
+    pl = getPepleFromMessage(message)
+    pl.height = message.text
+    cursor.execute("UPDATE Players SET Height = '{}' WHERE Id = {};".format(message.text, str(message.from_user.id)))
+    connect.commit()
+    msg = bot.send_message(message.from_user.id, "Поделись интересным фактом о себе")
+    bot.register_next_step_handler(msg, interesting_fact)
+
+
+def interesting_fact(message):
+    pl = getPepleFromMessage(message)
+    pl.facts.append(message.text)
+    cursor.execute(
+        "UPDATE Players SET InterestingFact = '{}' WHERE Id = {};".format(message.text, str(message.from_user.id)))
+    connect.commit()
+    msg = bot.send_message(message.from_user.id, "Ты так хорошо сегодня выглядишь, расскажи что на тебе")
+    bot.register_next_step_handler(msg, look_fact)
+
+
+def look_fact(message):
+    pl = getPepleFromMessage(message)
+    pl.facts.append('этот человек сегодня надел ' + message.text)
+    cursor.execute(
+        "UPDATE Players SET LookFact = '{}' WHERE Id = {};".format('этот человек сегодня надел ' + message.text,
+                                                                   str(message.from_user.id)))
+    connect.commit()
+
+    markup = telebot.types.ReplyKeyboardMarkup(resize_keyboard=True)
+
+    markup.add(telebot.types.KeyboardButton("Овен♈"), telebot.types.KeyboardButton("Телец♉"),
+               telebot.types.KeyboardButton("Близнецы♊"),
+               telebot.types.KeyboardButton("Рак♋"), telebot.types.KeyboardButton("Лев♌"),
+               telebot.types.KeyboardButton("Дева♍"),
+               telebot.types.KeyboardButton("Весы♎"), telebot.types.KeyboardButton("Скорпион♏"),
+               telebot.types.KeyboardButton("Стрелец♐"),
+               telebot.types.KeyboardButton("Козерог♑"), telebot.types.KeyboardButton("Водолей♒"),
+               telebot.types.KeyboardButton("Рыбы♓"))
+
+    msg = bot.send_message(message.from_user.id, "кто ты по знаку зодиака?", reply_markup=markup)
+
+    bot.register_next_step_handler(msg, zadiak)
+
+
+def zadiak(message):
+    pl = getPepleFromMessage(message)
+    pl.zadiak = message.text[:-1]
+    markup = telebot.types.ReplyKeyboardRemove(selective=False)
+    bot.send_message(message.from_user.id, "продолжи фразу:", reply_markup=markup)
+
+    msg = bot.send_message(message.from_user.id, "я по знаку задиака " + message.text[:-1] + " и по этому у меня ...")
+    bot.register_next_step_handler(msg, random_facts)
+
+
+def random_facts(message):
+    pl = getPepleFromMessage(message)
+    pl.facts.append("этот человек " + pl.zadiak + " и по этому у него " + message.text)
+    cursor.execute(
+        "UPDATE Players SET RandomFacts = '{}' WHERE Id = {};".format(
+            "этот человек " + pl.zadiak + " и по этому у него " + message.text, str(message.from_user.id)))
+    connect.commit()
+
     pl.get_biometry = True
     bot.send_message(message.from_user.id, """\
             пришли мне свое фото (селфи)
@@ -242,9 +325,16 @@ def game(answer):
 
             TwoOfPeples.append([pl, secondPerson])
             print("New pair created between {} and {}".format(pl, secondPerson))
-            bot.send_message(chat_id=pl.id, text="сделай фото с " + secondPerson.name)
-            bot.send_message(chat_id=pl.id, text="* отправь любое фото с 2 людьми на нем")  # добавленно на время теста
-            bot.send_message(chat_id=secondPerson.id, text="сделай фото с " + pl.name)
+
+            bot.send_message(chat_id=pl.id, text="Вот тебе наводка на человека, найди его и сделай с ним фото")
+            print(secondPerson.height)
+            bot.send_photo(chat_id=pl.id,
+                           photo=create_foto_of_wanted(secondPerson.height, str(secondPerson.get_fact())))
+
+            bot.send_message(chat_id=secondPerson.id,
+                             text="Вот тебе наводка на человека, найди его и сделай с ним фото")
+            bot.send_photo(chat_id=secondPerson.id, photo=create_foto_of_wanted(pl.height, pl.get_fact()))
+
             bot.answer_callback_query(answer.id)
 
         else:
@@ -271,6 +361,7 @@ def photo(message):
     out = open(src, "wb")
     out.write(downloaded_file)
     out.close()
+    bot.send_message(chat_id=message.from_user.id, text="Отлично! Фото принято, сейчас проверим")
     print('Photo from {} downloaded.'.format(getPepleFromMessage(message)))
     result = testbiometry.CheckTwoPresenceOfImage(pl1.biometry, pl2.biometry, src)
 

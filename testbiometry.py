@@ -3,16 +3,6 @@ import face_recognition
 import cv2
 import os
 
-
-
-image = "C:/Users/андрюшка/OneDrive/Desktop/II/Images/ДАША.bmp"
-image1 ="C:/Users/андрюшка/OneDrive/Desktop/II/Images/ГРУППОВОЕ1.bmp"
-image2 ="C:/Users/андрюшка/OneDrive/Desktop/II/Images/ГРУППОВОЕ2.bmp"
-image3 = "C:/Users/андрюшка/OneDrive/Desktop/II/Images/ГРУППОВОЕ3.bmp"
-image4= "C:/Users/андрюшка/OneDrive/Desktop/II/Images/Аня ТугубаеваНастя Колошко.jpg"
-image5 = "C:/Users/андрюшка/OneDrive/Desktop/II/Images/Вера.bmp"
-
-
 def GenerateEncodings(imageSrc):
     loadedImage = face_recognition.load_image_file(imageSrc)
     #print(len(face_recognition.face_locations(loadedImage)))
@@ -63,6 +53,13 @@ def CheckTwoPresenceOfImage(EncodingOfFirstKnown,EncodingOfSecondKnown,imageSrc)
         return False
 
 if __name__ == "__main__":
+    image = "C:/Users/андрюшка/OneDrive/Desktop/II/Images/ДАША.bmp"
+    image1 = "C:/Users/андрюшка/OneDrive/Desktop/II/Images/ГРУППОВОЕ1.bmp"
+    image2 = "C:/Users/андрюшка/OneDrive/Desktop/II/Images/ГРУППОВОЕ2.bmp"
+    image3 = "C:/Users/андрюшка/OneDrive/Desktop/II/Images/ГРУППОВОЕ3.bmp"
+    image4 = "C:/Users/андрюшка/OneDrive/Desktop/II/Images/Аня ТугубаеваНастя Колошко.jpg"
+    image5 = "C:/Users/андрюшка/OneDrive/Desktop/II/Images/Вера.bmp"
+
     encoding = GenerateEncodings(image)
     print(encoding)
     encoding2 = GenerateEncodings(image5)

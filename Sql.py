@@ -12,9 +12,6 @@ import test
 import testbiometry
 from wanted_person_image import create_foto_of_wanted
 
-
-
-
 print("start on version 1.2.0")
 
 TOKEN = os.environ['BOT_TOKEN']
@@ -107,7 +104,7 @@ class BusyPleers(telebot.custom_filters.SimpleCustomFilter):
 @bot.message_handler(commands=['help'])
 def start(message):
     bot.send_message(chat_id=message.from_user.id, text="отвеченно")
-    bot.send_photo(chat_id=message.from_user.id ,photo='wanted_files/foto.jpg')
+    bot.send_photo(chat_id=message.from_user.id, photo='foto.jpg')
 
 
 @bot.message_handler(commands=['start'])
@@ -441,7 +438,7 @@ if on_heroku == True:
         yandex_Disk = yadisk.YaDisk(token=os.environ['YANDEX_DISK_TOKEN'])
         print("check yandex token :", yandex_Disk.check_token())
         if not os.path.exists('wanted_files/foto.jpg'):
-            yandex_Disk.download("/game/wanted_foto/foto.jpg",'wanted_files/foto.jpg')
+            yandex_Disk.download("/game/wanted_foto/foto.jpg", 'wanted_files/foto.jpg')
             print("foto of wanted was from yandex downloaded.")
 
         server.run(host="0.0.0.0", port=int(os.environ.get('PORT', 5000)))
@@ -457,6 +454,6 @@ else:
         yandex_Disk = yadisk.YaDisk(token=os.environ['YANDEX_DISK_TOKEN'])
         print("check yandex token :", yandex_Disk.check_token())
         if not os.path.exists('wanted_files/foto.jpg'):
-            yandex_Disk.download("/game/wanted_foto/foto.jpg",'wanted_files/foto.jpg')
+            yandex_Disk.download("/game/wanted_foto/foto.jpg", 'foto.jpg')
 
         bot.polling(none_stop=True, interval=0)

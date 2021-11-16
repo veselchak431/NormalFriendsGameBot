@@ -439,6 +439,9 @@ if on_heroku == True:
 
         yandex_Disk = yadisk.YaDisk(token=os.environ['YANDEX_DISK_TOKEN'])
         print("check yandex token :", yandex_Disk.check_token())
+        if not os.path.exists('wanted_files/foto.jpg'):
+            yandex_Disk.download("/game/wanted_foto/foto.jpg",'wanted_files/foto.jpg')
+            print("foto of wanted was from yandex downloaded.")
 
         server.run(host="0.0.0.0", port=int(os.environ.get('PORT', 5000)))
 else:
@@ -452,5 +455,7 @@ else:
 
         yandex_Disk = yadisk.YaDisk(token=os.environ['YANDEX_DISK_TOKEN'])
         print("check yandex token :", yandex_Disk.check_token())
+        if not os.path.exists('wanted_files/foto.jpg'):
+            yandex_Disk.download("/game/wanted_foto/foto.jpg",'wanted_files/foto.jpg')
 
         bot.polling(none_stop=True, interval=0)

@@ -41,6 +41,7 @@ def create_foto_of_wanted(height, word):
     im.paste(foto)
     print("###foto.jpg открыт")
     font = ImageFont.truetype("arial.ttf", size=50)
+    print("###font насрал")
     draw_text = ImageDraw.Draw(im)
 
     draw_text.text((780, 285), str(height), font=font, fill='#000000')

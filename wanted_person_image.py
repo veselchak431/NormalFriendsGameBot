@@ -36,9 +36,9 @@ def w_wrap(word: str) -> str:
 
 def create_foto_of_wanted(height, word):
     print("###create_foto_of_wanted  вызвана")
-    im = Image.new(mode="RGB", size=(1297, 864))
-    foto = Image.open('foto.jpg')
-    im.paste(foto)
+    #im = Image.new(mode="RGB", size=(1297, 864))
+    im = Image.open('foto.jpg')
+    #im.paste(foto)
     print("###foto.jpg открыт")
     font = ImageFont.truetype("arial.ttf", size=50)
     print("###font насрал")

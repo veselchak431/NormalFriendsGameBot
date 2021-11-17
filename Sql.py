@@ -12,6 +12,9 @@ import test
 import testbiometry
 from wanted_person_image import create_foto_of_wanted
 
+from PIL import Image, ImageDraw, ImageFont
+
+
 print("start on version 1.2.0")
 
 TOKEN = os.environ['BOT_TOKEN']
@@ -104,24 +107,29 @@ class BusyPleers(telebot.custom_filters.SimpleCustomFilter):
 @bot.message_handler(commands=['help'])
 def start(message):
     bot.send_message(chat_id=message.from_user.id, text="отвеченно")
-    src = open('foto.jpg', "rb")
-    bot.send_photo(chat_id=message.from_user.id, photo=src)
-    src.close()
+    #src = open('foto.jpg', "rb")
+    #bot.send_photo(chat_id=message.from_user.id, photo=src)
+    #src.close()
 
-
-    src = 'wanted.jpg'
-    print("файл существует wanted", os.path.exists(src))
-    if os.path.exists(src):
-        remove(src)
-
-    create_foto_of_wanted("123", str("это обычный неработающий тест"))
-    wanted = open(src, "rb")
-    print("файл wanted cоздан", os.path.exists(src))
+    img = Image.new(mode="RGB", size=(500, 500))
+    draw_text = ImageDraw.Draw(img)
+    draw_text.text((200, 300), "kyky", fill='#ffffff')
+    img.save('wanted.jpg')
+    wanted = open('wanted.jpg', "rb")
     bot.send_photo(chat_id=message.from_user.id, photo=wanted)
-    wanted.close()
-    remove(src)
-    print("файл отправлен")
-    bot.send_photo(chat_id=message.from_user.id, photo=create_foto_of_wanted("123", str("это обычный неработающий тест")))
+    #src = 'wanted.jpg'
+    #print("файл существует wanted", os.path.exists(src))
+    #if os.path.exists(src):
+    #    remove(src)
+
+    #create_foto_of_wanted("123", str("это обычный неработающий тест"))
+    #wanted = open(src, "rb")
+    #print("файл wanted cоздан", os.path.exists(src))
+    #bot.send_photo(chat_id=message.from_user.id, photo=wanted)
+    #wanted.close()
+    #remove(src)
+    #print("файл отправлен")
+    #bot.send_photo(chat_id=message.from_user.id, photo=create_foto_of_wanted("123", str("это обычный неработающий тест")))
 
 
 @bot.message_handler(commands=['start'])

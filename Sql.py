@@ -104,7 +104,7 @@ class BusyPleers(telebot.custom_filters.SimpleCustomFilter):
 @bot.message_handler(commands=['help'])
 def start(message):
     bot.send_message(chat_id=message.from_user.id, text="отвеченно")
-    src = open('wanted_files/foto.jpg',"rb")
+    src = open('foto.jpg', "rb")
     bot.send_photo(chat_id=message.from_user.id, photo=src)
     src.close()
 

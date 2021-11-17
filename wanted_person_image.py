@@ -35,7 +35,7 @@ def w_wrap(word: str) -> str:
 
 
 def create_foto_of_wanted(height, word):
-    im = Image.open('wanted_files/foto.jpg')
+    im = Image.open('foto.jpg')
     font = ImageFont.truetype("arial.ttf", size=50)
     draw_text = ImageDraw.Draw(im)
 
@@ -61,7 +61,7 @@ def create_foto_of_wanted(height, word):
     draw_text.text((600, 600), text[2], font=font, fill='#000000')
     draw_text.text((600, 680), text[3], font=font, fill='#000000')
     draw_text.text((100, 760), text[4], font=font, fill='#000000')
-    im.save('wanted_files/wanted.jpg')
+    im.save('wanted.jpg')
     return
 
 

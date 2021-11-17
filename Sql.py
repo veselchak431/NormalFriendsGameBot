@@ -449,8 +449,8 @@ def download_photo(message):
         yandex_Disk.remove("/game/task/{}.jpg".format(src))
     yandex_Disk.upload(src, ("/game/task/{}.jpg".format(src)))
     remove(src)
-    bot.send_message(chat_id=message.from_user.id, text="Отлично! задание выполнено!")
-
+    bot.send_message(chat_id=pl1.id, text="Отлично! задание выполнено!")
+    bot.send_message(chat_id=pl2.id, text="Отлично! задание выполнено!")
     pl1.current_task.next_task()
     pl2.current_task.next_task()
 

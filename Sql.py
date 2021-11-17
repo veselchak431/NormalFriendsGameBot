@@ -104,7 +104,10 @@ class BusyPleers(telebot.custom_filters.SimpleCustomFilter):
 @bot.message_handler(commands=['help'])
 def start(message):
     bot.send_message(chat_id=message.from_user.id, text="отвеченно")
-    bot.send_photo(chat_id=message.from_user.id, photo='foto.jpg')
+    src = open('foto.jpg',"rb")
+    bot.send_photo(chat_id=message.from_user.id, photo=src)
+    src.close()
+
 
 
 @bot.message_handler(commands=['start'])
@@ -438,9 +441,12 @@ if on_heroku == True:
         yandex_Disk = yadisk.YaDisk(token=os.environ['YANDEX_DISK_TOKEN'])
         print("check yandex token :", yandex_Disk.check_token())
         if not os.path.exists('wanted_files/foto.jpg'):
-            yandex_Disk.download("/game/wanted_foto/foto.jpg", 'foto.jpg')
             yandex_Disk.download("/game/wanted_foto/foto.jpg", 'wanted_files/foto.jpg')
-            print("foto of wanted was from yandex downloaded.")
+
+        if not os.path.exists('foto.jpg'):
+                yandex_Disk.download("/game/wanted_foto/foto.jpg", 'foto.jpg')
+
+        print("foto of wanted was from yandex downloaded.")
 
         print(os.path.exists('wanted_files/foto.jpg'))
 
@@ -457,6 +463,8 @@ else:
         yandex_Disk = yadisk.YaDisk(token=os.environ['YANDEX_DISK_TOKEN'])
         print("check yandex token :", yandex_Disk.check_token())
         if not os.path.exists('wanted_files/foto.jpg'):
-            yandex_Disk.download("/game/wanted_foto/foto.jpg", 'foto.jpg')
+            yandex_Disk.download("/game/wanted_foto/foto.jpg",'wanted_files/foto.jpg')
+        if not os.path.exists('foto.jpg'):
+            yandex_Disk.download("/game/wanted_foto/foto.jpg",'foto.jpg')
 
-        bot.polling(none_stop=True, interval=0)
+        bot.polling(none_stop=True, interval=0,timeout=60)

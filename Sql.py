@@ -328,24 +328,24 @@ def game(answer):
             print("New pair created between {} and {}".format(pl, secondPerson))
 
             bot.send_message(chat_id=pl.id, text="Вот тебе наводка на человека, найди его и сделай с ним фото")
-
-            if os.path.exists ('wanted_files/wanted.jpg'):
-                remove("wanted_files/wanted.jpg")
+            src = 'wanted.jpg'
+            if os.path.exists(src):
+                remove(src)
             create_foto_of_wanted(secondPerson.height, str(secondPerson.get_fact()))
-            wanted = open("wanted_files/wanted.jpg","rb")
+            wanted = open(src,"rb")
             bot.send_photo(chat_id=pl.id, photo=wanted)
             wanted.close()
-            remove("wanted_files/wanted.jpg")
+            remove(src)
 
 
             bot.send_message(chat_id=secondPerson.id,
                              text="Вот тебе наводка на человека, найди его и сделай с ним фото")
 
             create_foto_of_wanted(pl.height, pl.get_fact())
-            wanted = open("wanted_files/wanted.jpg", "rb")
+            wanted = open(src, "rb")
             bot.send_photo(chat_id=secondPerson.id, photo=wanted)
             wanted.close()
-            remove("wanted_files/wanted.jpg")
+            remove(src)
 
             bot.answer_callback_query(answer.id)
 

@@ -14,7 +14,6 @@ from wanted_person_image import create_foto_of_wanted
 
 from PIL import Image, ImageDraw, ImageFont
 
-
 print("start on version 1.2.0")
 
 TOKEN = os.environ['BOT_TOKEN']
@@ -107,30 +106,8 @@ class BusyPleers(telebot.custom_filters.SimpleCustomFilter):
 @bot.message_handler(commands=['help'])
 def start(message):
     bot.send_message(chat_id=message.from_user.id, text="отвеченно")
-    #src = open('foto.jpg', "rb")
-    #bot.send_photo(chat_id=message.from_user.id, photo=src)
-    #src.close()
-
-    create_foto_of_wanted("123", str("это обычный неработающий тест"))
-    wanted = open('wanted.jpg', "rb")
-
-    bot.send_photo(chat_id=message.from_user.id, photo=wanted)
-    wanted.close()
-    remove('wanted.jpg')
-    bot.send_photo(chat_id=message.from_user.id, photo= create_foto_of_wanted("123", str("это обычный неработающий тест")))
-    #src = 'wanted.jpg'
-    #print("файл существует wanted", os.path.exists(src))
-    #if os.path.exists(src):
-    #    remove(src)
-
-
-    #wanted = open(src, "rb")
-    #print("файл wanted cоздан", os.path.exists(src))
-    #bot.send_photo(chat_id=message.from_user.id, photo=wanted)
-    #wanted.close()
-    #remove(src)
-    #print("файл отправлен")
-    #bot.send_photo(chat_id=message.from_user.id, photo=create_foto_of_wanted("123", str("это обычный неработающий тест")))
+    bot.send_photo(chat_id=message.from_user.id,
+                   photo=create_foto_of_wanted("123", str("это обычный неработающий тест")))
 
 
 @bot.message_handler(commands=['start'])
@@ -351,24 +328,12 @@ def game(answer):
             print("New pair created between {} and {}".format(pl, secondPerson))
 
             bot.send_message(chat_id=pl.id, text="Вот тебе наводка на человека, найди его и сделай с ним фото")
-            src = 'wanted.jpg'
-            if os.path.exists(src):
-                remove(src)
-            create_foto_of_wanted(secondPerson.height, str(secondPerson.get_fact()))
-            wanted = open(src,"rb")
-            bot.send_photo(chat_id=pl.id, photo=wanted)
-            wanted.close()
-            remove(src)
-
+            bot.send_photo(chat_id=pl.id,
+                           photo=create_foto_of_wanted(secondPerson.height, str(secondPerson.get_fact())))
 
             bot.send_message(chat_id=secondPerson.id,
                              text="Вот тебе наводка на человека, найди его и сделай с ним фото")
-
-            create_foto_of_wanted(pl.height, pl.get_fact())
-            wanted = open(src, "rb")
-            bot.send_photo(chat_id=secondPerson.id, photo=wanted)
-            wanted.close()
-            remove(src)
+            bot.send_photo(chat_id=secondPerson.id, photo=create_foto_of_wanted(pl.height, pl.get_fact()))
 
             bot.answer_callback_query(answer.id)
 
@@ -475,13 +440,6 @@ if on_heroku == True:
         yandex_Disk = yadisk.YaDisk(token=os.environ['YANDEX_DISK_TOKEN'])
         print("check yandex token :", yandex_Disk.check_token())
 
-        #if not os.path.exists('wanted_files/foto.jpg'):
-        #   yandex_Disk.download("/game/wanted_foto/foto.jpg", 'wanted_files/foto.jpg')
-        if not os.path.exists('foto.jpg'):
-                yandex_Disk.download("/game/wanted_foto/foto.jpg", 'foto.jpg')
-                print("foto of wanted was from yandex downloaded.")
-
-
 
         server.run(host="0.0.0.0", port=int(os.environ.get('PORT', 5000)))
 else:
@@ -495,9 +453,5 @@ else:
 
         yandex_Disk = yadisk.YaDisk(token=os.environ['YANDEX_DISK_TOKEN'])
         print("check yandex token :", yandex_Disk.check_token())
-       # if not os.path.exists('wanted_files/foto.jpg'):
-       #     yandex_Disk.download("/game/wanted_foto/foto.jpg",'wanted_files/foto.jpg')
-        if not os.path.exists('foto.jpg'):
-            yandex_Disk.download("/game/wanted_foto/foto.jpg",'foto.jpg')
 
-        bot.polling(none_stop=True, interval=0,timeout=60)
+        bot.polling(none_stop=True, interval=0, timeout=60)

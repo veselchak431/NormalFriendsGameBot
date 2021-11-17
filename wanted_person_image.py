@@ -1,5 +1,6 @@
 from PIL import Image, ImageDraw, ImageFont
-
+import pathlib
+from pathlib import Path
 
 def w_wrap(word: str) -> str:
     def is_vow(let: str) -> bool:
@@ -36,8 +37,8 @@ def w_wrap(word: str) -> str:
 
 def create_foto_of_wanted(height, word):
 
-    im = Image.open('foto.jpg')
-    font = ImageFont.truetype("arial.ttf", size=50)
+    im = Image.open(str(Path(pathlib.Path.cwd(), 'wanted_file', 'foto.jpg')))
+    font = ImageFont.truetype(str(Path(pathlib.Path.cwd(), 'wanted_file', "arial.ttf")), size=50)
     draw_text = ImageDraw.Draw(im)
 
     draw_text.text((780, 285), str(height), font=font, fill='#000000')

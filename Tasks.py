@@ -1,3 +1,5 @@
+import pathlib
+from pathlib import Path
 class Task:
     def __init__(self, name, type_of_task, text, file_src, key):
         self.name = name
@@ -30,6 +32,9 @@ class Task:
         return False
 
 
-Tasks = [Task("1", ["simply_photo", "text"], ["первое задание для 1-го задания", "это первое задание, ключ - 1"], "foto.jpg", '1'),
-         Task("2", ["simply_photo", "text"], ["первое задание для 2-го задания", "это второе задание, ключ - 2"], "foto.jpg", '2')]
+
+Tasks = [Task("1", ["simply_photo", "text"], ["первое задание для 1-го задания", "это первое задание, ключ - 1"],
+              str(Path(pathlib.Path.cwd(), 'task_file', "wanted.jpg")), '1'),
+         Task("2", ["simply_photo", "text"], ["первое задание для 2-го задания", "это второе задание, ключ - 2"],
+              str(Path(pathlib.Path.cwd(), 'task_file', "wanted.jpg")), '2')]
 print(Tasks[1].get_file() != False)

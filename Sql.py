@@ -111,18 +111,18 @@ def start(message):
     #bot.send_photo(chat_id=message.from_user.id, photo=src)
     #src.close()
 
-    img = Image.new(mode="RGB", size=(500, 500))
-    draw_text = ImageDraw.Draw(img)
-    draw_text.text((200, 300), "kyky", fill='#ffffff')
-    img.save('wanted.jpg')
+    create_foto_of_wanted("123", str("это обычный неработающий тест"))
     wanted = open('wanted.jpg', "rb")
+
     bot.send_photo(chat_id=message.from_user.id, photo=wanted)
+    wanted.close()
+    remove('wanted.jpg')
     #src = 'wanted.jpg'
     #print("файл существует wanted", os.path.exists(src))
     #if os.path.exists(src):
     #    remove(src)
 
-    #create_foto_of_wanted("123", str("это обычный неработающий тест"))
+
     #wanted = open(src, "rb")
     #print("файл wanted cоздан", os.path.exists(src))
     #bot.send_photo(chat_id=message.from_user.id, photo=wanted)
@@ -496,7 +496,7 @@ else:
         print("check yandex token :", yandex_Disk.check_token())
        # if not os.path.exists('wanted_files/foto.jpg'):
        #     yandex_Disk.download("/game/wanted_foto/foto.jpg",'wanted_files/foto.jpg')
-       #if not os.path.exists('foto.jpg'):
-       #     yandex_Disk.download("/game/wanted_foto/foto.jpg",'foto.jpg')
+        if not os.path.exists('foto.jpg'):
+            yandex_Disk.download("/game/wanted_foto/foto.jpg",'foto.jpg')
 
         bot.polling(none_stop=True, interval=0,timeout=60)

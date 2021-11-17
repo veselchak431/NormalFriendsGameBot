@@ -468,9 +468,9 @@ if on_heroku == True:
 
         #if not os.path.exists('wanted_files/foto.jpg'):
         #   yandex_Disk.download("/game/wanted_foto/foto.jpg", 'wanted_files/foto.jpg')
-       # if not os.path.exists('foto.jpg'):
-       #         yandex_Disk.download("/game/wanted_foto/foto.jpg", 'foto.jpg')
-       # print("foto of wanted was from yandex downloaded.")
+        if not os.path.exists('foto.jpg'):
+                yandex_Disk.download("/game/wanted_foto/foto.jpg", 'foto.jpg')
+                print("foto of wanted was from yandex downloaded.")
 
 
 

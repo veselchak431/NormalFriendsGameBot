@@ -69,7 +69,7 @@ def create_foto_of_wanted(height, word):
     print("###wanted.jpg изменен")
     im.save('wanted.jpg')
     print("###wanted.jpg сохранен")
-    return
+    return im
 
 
 if __name__ == "__main__":

@@ -117,6 +117,7 @@ def start(message):
     bot.send_photo(chat_id=message.from_user.id, photo=wanted)
     wanted.close()
     remove('wanted.jpg')
+    bot.send_photo(chat_id=message.from_user.id, photo= create_foto_of_wanted("123", str("это обычный неработающий тест")))
     #src = 'wanted.jpg'
     #print("файл существует wanted", os.path.exists(src))
     #if os.path.exists(src):

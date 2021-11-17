@@ -11,8 +11,10 @@ from flask import Flask, request
 import test
 import testbiometry
 from wanted_person_image import create_foto_of_wanted
+from Tasks import Task, Tasks
 
-from PIL import Image, ImageDraw, ImageFont
+import pathlib
+from pathlib import Path
 
 print("start on version 1.2.0")
 
@@ -43,10 +45,19 @@ class player:
         self.biometry = ''
         self.zadiak = ''
         self.facts = []
-        self.comingPartners = []
         self.get_biometry = "onReg"
+
+        self.comingPartners = []
+
+        self.current_task = ""
+        self.coming_tasks = []
+
         self.busy = True
         self.BiometryBusy = False
+
+    def accept_task(self):
+        self.coming_tasks.append(self.current_task)
+        self.current_task = ""
 
     def get_fact(self):
         return self.facts[randint(0, len(self.facts) - 1)]
@@ -103,12 +114,31 @@ class BusyPleers(telebot.custom_filters.SimpleCustomFilter):
             pass
 
 
+class check_task_type(telebot.custom_filters.SimpleCustomFilter):
+    key = 'CHECK_TASK_TYPE'
+
+    @staticmethod
+    def check(message):
+        try:
+
+            return getPepleFromMessage(message).current_task.current_task_type
+        except:
+            pass
+
+
 @bot.message_handler(commands=['help'])
 def start(message):
     bot.send_message(chat_id=message.from_user.id, text="отвеченно")
-    bot.send_photo(chat_id=message.from_user.id,
-                   photo=create_foto_of_wanted("123", str("это обычный неработающий тест")))
 
+    dir_path = pathlib.Path.cwd()
+
+    # Объединяем полученную строку с недостающими частями пути
+    path = Path(dir_path, 'task_file', 'wanted.jpg')
+    print(path)
+    src = open(path, "rb")
+    bot.send_photo(chat_id=message.from_user.id,
+                   photo=src)
+    src.close()
 
 @bot.message_handler(commands=['start'])
 def start(message):
@@ -373,23 +403,31 @@ def photo(message):
     print("the result of the uploaded photo : ", result)
     result = True  # всегда пропускать не смотря на фото
     if result:
-        pl1.comingPartners.append(pl2)
-        pl2.comingPartners.append(pl1)
-        try:
-            TwoOfPeples.remove([pl1, pl2])
-        except:
-            pass
-        try:
-            TwoOfPeples.remove([pl2, pl1])
-        except:
-            pass
+
         print("Pair of {} and {} successfully passed the task.".format(pl1, pl2))
         pl1.BiometryBusy = False
         pl2.BiometryBusy = False
-        bot.send_message(chat_id=pl1.id, text='на фото действительно есть ' + str(pl1) + " и " + str(pl2),
-                         reply_markup=startGame)
-        bot.send_message(chat_id=pl2.id, text='на фото действительно есть ' + str(pl1) + " и " + str(pl2),
-                         reply_markup=startGame)
+        bot.send_message(chat_id=pl1.id, text='на фото действительно есть ' + str(pl1) + " и " + str(pl2))
+        bot.send_message(chat_id=pl2.id, text='на фото действительно есть ' + str(pl1) + " и " + str(pl2))
+
+        avaible_tasks = []
+        all_task = Tasks.copy()
+        for t in all_task:
+            if not (t in pl1.coming_tasks) and not (t in pl2.coming_tasks):
+                avaible_tasks.append(t)
+        print(avaible_tasks)
+        if avaible_tasks == []:
+            print("нет доступных заданий")
+            avaible_tasks = Tasks.copy()
+        current = avaible_tasks[randint(0, len(avaible_tasks) - 1)]
+        pl1.current_task = current
+        pl2.current_task = current
+
+        bot.send_message(chat_id=pl1.id, text="*Задани1*", parse_mode="Markdown")
+        bot.send_message(chat_id=pl1.id, text=current.current_task)
+
+        bot.send_message(chat_id=pl2.id, text="*Задани1*", parse_mode="Markdown")
+        bot.send_message(chat_id=pl2.id, text=current.current_task)
 
 
     else:
@@ -398,8 +436,71 @@ def photo(message):
         bot.send_message(message.chat.id, 'попробуйте еще раз')
 
 
+@bot.message_handler(CHECK_TASK_TYPE="simply_photo", content_types=['photo'])
+def download_photo(message):
+    pl1, pl2 = getTwoPepleFromMessage(message)
+    src = '{}.jpg'.format(str(pl1) + "_и_" + str(pl2) + "_task")
+    file_info = bot.get_file(message.photo[-1].file_id)
+    downloaded_file = bot.download_file(file_info.file_path)
+    out = open(src, "wb")
+    out.write(downloaded_file)
+    out.close()
+    if yandex_Disk.exists("/game/task/{}.jpg".format(src)):
+        yandex_Disk.remove("/game/task/{}.jpg".format(src))
+    yandex_Disk.upload(src, ("/game/task/{}.jpg".format(src)))
+    remove(src)
+    bot.send_message(chat_id=message.from_user.id, text="Отлично! задание выполнено!")
+
+    pl1.current_task.next_task()
+    pl2.current_task.next_task()
+
+    bot.send_message(chat_id=pl1.id, text="*Задани2*", parse_mode="Markdown")
+    bot.send_message(chat_id=pl1.id, text=pl1.current_task.current_task)
+
+    bot.send_message(chat_id=pl2.id, text="*Задани2*", parse_mode="Markdown")
+    bot.send_message(chat_id=pl2.id, text=pl2.current_task.current_task)
+
+    if pl2.current_task.get_file() != False:
+        print("высылаю материал")
+        src = open(pl2.current_task.get_file(), "rb")
+        bot.send_photo(chat_id=pl1.id, photo=src)
+        src = open(pl2.current_task.get_file(), "rb")
+        bot.send_photo(chat_id=pl2.id, photo=src)
+        src.close()
+
+
+@bot.message_handler(CHECK_TASK_TYPE="text", content_types=['text'])
+def check_key(message):
+    print("message.text")
+    player = getPepleFromMessage(message)
+    if player.current_task.check_key(message.text):
+        print("задание выполнено")
+        player1, player2 = getTwoPepleFromMessage(message)
+        player1.accept_task()
+        player2.accept_task()
+
+        player1.comingPartners.append(player2)
+        player2.comingPartners.append(player1)
+        try:
+            TwoOfPeples.remove([player1, player2])
+        except:
+            pass
+        try:
+            TwoOfPeples.remove([player2, player1])
+        except:
+            pass
+
+        bot.send_message(chat_id=player1.id, text="вы выполнили задание, можете двигаться дальше.",
+                         reply_markup=startGame)
+        bot.send_message(chat_id=player2.id, text="вы выполнили задание, можете двигаться дальше.",
+                         reply_markup=startGame)
+    else:
+        bot.send_message(message.chat.id, 'видимо ответ неверный,попробуйте еще раз.')
+
+
 bot.add_custom_filter(OnBiometry())
 bot.add_custom_filter(BusyPleers())
+bot.add_custom_filter(check_task_type())
 
 on_heroku = False
 if 'DYNO' in os.environ:
@@ -439,7 +540,6 @@ if on_heroku == True:
 
         yandex_Disk = yadisk.YaDisk(token=os.environ['YANDEX_DISK_TOKEN'])
         print("check yandex token :", yandex_Disk.check_token())
-
 
         server.run(host="0.0.0.0", port=int(os.environ.get('PORT', 5000)))
 else:

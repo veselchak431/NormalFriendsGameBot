@@ -62,7 +62,7 @@ def create_foto_of_wanted(height, word):
     draw_text.text((600, 680), text[3], font=font, fill='#000000')
     draw_text.text((100, 760), text[4], font=font, fill='#000000')
     im.save('wanted.jpg')
-    return
+    return im
 
 
 if __name__ == "__main__":

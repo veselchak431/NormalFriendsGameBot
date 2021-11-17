@@ -109,6 +109,19 @@ def start(message):
     src.close()
 
 
+    src = 'wanted.jpg'
+    if os.path.exists(src):
+
+        remove(src)
+    create_foto_of_wanted("123", str("это обычный неработающий тест"))
+    wanted = open(src, "rb")
+    print("файл существует ",os.path.exists(src))
+    bot.send_photo(chat_id=message.from_user.id, photo=wanted)
+    wanted.close()
+    remove(src)
+    print("файл отправлен")
+    bot.send_photo(chat_id=message.from_user.id, photo=create_foto_of_wanted("123", str("это обычный неработающий тест")))
+
 
 @bot.message_handler(commands=['start'])
 def start(message):

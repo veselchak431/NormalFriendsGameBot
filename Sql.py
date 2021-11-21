@@ -401,7 +401,7 @@ def photo(message):
 
     remove(src)
     print("the result of the uploaded photo : ", result)
-    result = True  # всегда пропускать не смотря на фото
+
     if result:
 
         print("Pair of {} and {} successfully passed the task.".format(pl1, pl2))
@@ -471,7 +471,7 @@ def download_photo(message):
 
 @bot.message_handler(CHECK_TASK_TYPE="text", content_types=['text'])
 def check_key(message):
-    print("message.text")
+
     player = getPepleFromMessage(message)
     if player.current_task.check_key(message.text):
         print("задание выполнено")
